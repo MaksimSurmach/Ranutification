@@ -8,15 +8,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httprate"
 )
 
-func sendTelegramMessage(message string) error {
-	// Get Telegram API token and recipient ID from environment variables
+func sendTelegramMessage(message string, recipientID string) error {
+	// Get Telegram API token from environment variables
 	apiToken := os.Getenv("TELEGRAM_API_TOKEN")
-	recipientID := os.Getenv("TELEGRAM_RECIPIENT_ID")
+
 
 	// Create URL for sending message
 	sendMessageURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", apiToken)
@@ -134,17 +135,6 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 
 // handler for webhook
 func mainHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	CODE := os.Getenv("CODE")
-	//CODE := "test"
-	if r.URL.Path != "/"+CODE {
-		http.Error(w, "Invalid code", http.StatusBadRequest)
-		return
-	}
 
 	// Parse incoming data to string
 	body, err := parseBody(r)
@@ -169,39 +159,36 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	body += "\nSender: " + IPAddress + "\n"
 
-	err = sendTelegramMessage(body)
+	err = sendTelegramMessage(body, r.URL.Path[1:])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// Send response 200 OK
-	fmt.Fprintf(w, "OK")
+	w.Write([]byte("OK"))
 
 }
 
 func main() {
-	http.HandleFunc("/health", healthHandler)
-	http.HandleFunc("/", mainHandler)
-	http.ListenAndServe(":8080", nil)
+	r := chi.NewRouter()
 
-	// Handle signals
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		sig := <-sigCh
-		fmt.Printf("Received signal: %v\n", sig)
-		sendTelegramMessage("Bot stopped")
-		os.Exit(1)
-	}()
+	// A good base middleware stack
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(60 * time.Second))
 
-	// Handle internal panics
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Printf("Recovered from panic: %v\n", r)
-			sendTelegramMessage("Bot stopped")
-			os.Exit(1)
-		}
-	}()
 
+	r.Get("/health", healthHandler) 
+	
+
+	r.Group(func(r chi.Router) {
+		r.Use(httprate.LimitByIP(3, 1*time.Minute))
+		r.Post("/{^[0-9]{6,9}$}", mainHandler)
+	})
+
+
+	http.ListenAndServe(":8080", r)
 }

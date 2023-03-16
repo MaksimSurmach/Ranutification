@@ -1,0 +1,25 @@
+kind: pipeline
+type: kubernetes
+name: default
+
+steps:
+# - name: test
+#   image: golang
+#   commands:
+#   - go test
+
+- name: build 
+  image: plugins/docker
+  settings:
+    username: 
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+    repo: maxsurm/ranutif
+    tags: ${DRONE_COMMIT_SHA}
+
+trigger:
+  branch:
+  - master
+  event:
+  - push
