@@ -1,6 +1,8 @@
+
 kind: pipeline
+name: Build and Deploy Ranutification
 type: kubernetes
-name: ranutif
+
 
 steps:
 - name: build 
@@ -12,7 +14,3 @@ steps:
       from_secret: docker_password
     repo: maxsurm/ranutif
     tags: ${DRONE_COMMIT_SHA}
-
-trigger:
-  event:
-  - push
