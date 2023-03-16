@@ -1,6 +1,6 @@
 kind: pipeline
 type: kubernetes
-name: default
+name: ranutif
 
 steps:
 # - name: test
@@ -19,7 +19,5 @@ steps:
     tags: ${DRONE_COMMIT_SHA}
 
 trigger:
-  branch:
-  - master
   event:
   - push
