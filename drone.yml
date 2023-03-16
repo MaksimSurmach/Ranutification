@@ -3,11 +3,6 @@ type: kubernetes
 name: ranutif
 
 steps:
-# - name: test
-#   image: golang
-#   commands:
-#   - go test
-
 - name: build 
   image: plugins/docker
   settings:
