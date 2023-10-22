@@ -6,4 +6,4 @@ require (
 	github.com/go-chi/httprate v0.7.1 // indirect
 )
 
-module example.com/mod
+module ranutification
