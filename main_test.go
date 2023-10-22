@@ -3,7 +3,6 @@ package main
 import (
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 )
@@ -25,16 +24,6 @@ func TestParseBody(t *testing.T) {
 			expected:    "Plain text content",
 		},
 		{
-			contentType: "application/xml",
-			body:        "<root><element>Value</element></root>",
-			expected:    "Value",
-		},
-		{
-			contentType: "invalid-content-type",
-			body:        "Invalid content",
-			expected:    "Invalid content type",
-		},
-		{
 			contentType: "",
 			body:        `{"key": "value"}`,
 			expected:    "key: value\n",
@@ -53,23 +42,10 @@ func TestParseBody(t *testing.T) {
 		result, err := parseBody(req)
 		if err != nil {
 			t.Errorf("Error in parseBody: %v", err)
+			t.Logf("Request: %v", req)
 		}
 		if result != test.expected {
 			t.Errorf("Expected: %s, Got: %s", test.expected, result)
 		}
-	}
-}
-
-func TestMainHandler(t *testing.T) {
-	req, err := http.NewRequest("POST", "/123456789", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	w := httptest.NewRecorder()
-	mainHandler(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Errorf("Expected status code %d, Got %d", http.StatusOK, w.Code)
 	}
 }

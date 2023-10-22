@@ -18,12 +18,7 @@ func parseBody(r *http.Request) (string, error) {
 	contentType := r.Header.Get("Content-Type")
 
 	if contentType == "" {
-		body, err := types.ParseBodyJson(r)
-		if err == nil {
-			return body, nil
-		}
-
-		body, err = types.ParseXMLBody(r)
+		body, err := types.ParseJSONBody(r)
 		if err == nil {
 			return body, nil
 		}
@@ -37,11 +32,9 @@ func parseBody(r *http.Request) (string, error) {
 
 	switch contentType {
 	case "application/json":
-		return types.ParseBodyJson(r)
+		return types.ParseJSONBody(r)
 	case "text/plain":
 		return types.ParsePlainBody(r)
-	case "application/xml":
-		return types.ParseXMLBody(r)
 	default:
 		return "Invalid content type", errors.New("Invalid content type")
 	}
@@ -106,6 +99,7 @@ func main() {
 	r.Group(func(r chi.Router) {
 		r.Use(httprate.LimitByIP(3, 1*time.Minute))
 		r.Post("/{^[0-9]{6,9}$}", mainHandler)
+		r.Get("/{^[0-9]{6,9}$}", mainHandler)
 	})
 
 	log.Println("Starting server on port 8080")
