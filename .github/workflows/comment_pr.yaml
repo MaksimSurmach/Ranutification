@@ -1,14 +1,12 @@
 name: add comment to PR
 
-on: issue_comment
-
-
+on:
+  issue_comment:                                     
+    types: [created, edited, deleted]
 jobs:
-  pr_commented:
-    # This job only runs for pull request comments
-    name: PR comment
-    if: ${{ github.event.issue.pull_request }}
-    runs-on: ubuntu-latest
+  job01:
+    if: contains(github.event.comment.html_url, '/pull/')    # check if the comments come from pull request, exclude those from issue.
+    runs-on: [ubuntu-latest]
     steps:
       - run: |
           echo A comment on PR $NUMBER
