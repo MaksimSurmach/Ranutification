@@ -1,0 +1,16 @@
+name: TIMER
+
+on:
+  push:
+    branches:
+      - develop
+      - feature/*
+      - cicd/*
+
+
+jobs:
+  echo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: wait 3 minutes
+        run: sleep 180

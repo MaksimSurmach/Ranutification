@@ -14,3 +14,7 @@ steps:
       from_secret: docker_password
     repo: maxsurm/ranutif
     tags: ${DRONE_COMMIT_SHA}
+
+trigger:
+  branch:
+  - master
