@@ -1,8 +1,6 @@
 name: add comment to PR
 
-on:
-  issue_comment:
-    types: [ created, deleted ]
+on: issue_comment
 
 
 jobs:
